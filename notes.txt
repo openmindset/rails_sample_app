@@ -507,11 +507,32 @@ Eliminating Duplication With Layouts
 ---------
 ---------
 ---------
-
 Conclusion:
+Let's push everything up to Git.
+  git add .
+  git commit -m "Finish static pages"
+
+  Now merge the static-pages branch back into master:
+  git checkout master
+  git merge static-pages
+
+  Now push it up:
+  git push
+
+  And deploy:
+  git push heroku
 
 
+---------
+---------
+---------
 
+Exercies:
+1) Make a Contact Page.
+  First, add your tests and get them to fail.
+  
+  Add the route:
+  get "static_pages/contact"
 
 
 
