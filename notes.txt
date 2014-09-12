@@ -156,7 +156,7 @@ Deploying the barebones app to Heroku.
 ---------
 ---------
 
-Generating And Customizing Static Pages
+GENERATING AND CUSTOMIZING STATIC PAGES
 
 Create a new branch on Git.
 
@@ -190,6 +190,276 @@ Our current routes.rb file:
   to respond to the Get REST action. So, when we generate a home action inside
   the StaticPages controller we automatically get a page at the address 
   /static_pages/home.
+
+---------
+The Generated StaticPages Controller
+
+app/controllers/static_pages_controller.rb:
+
+  class StaticPagesController < ApplicationController
+
+    def home
+    end
+
+    def help
+    end
+  end
+
+  The StaticPagesController class inherits from ApplicationController.
+  
+  The generator gave us the home and help methods. In Rails, when someone
+  visits /static_pages/home, Rails looks in the StaticPages controller and
+  executes the home method, and then renders the view corresponding to the
+  action (in this case, the default generated view)
+
+---------
+The Generated Views
+
+The home page (app/views/static_pages/home.html.erb):
+
+  <h1>StaticPages#home</h1>
+  <p>Find me in app/views/static_pages/home.html.erb</p>
+
+  As you can see, it's just filler at the moment.
+
+---------
+Let's Commit to Git.
+
+  git add .
+  git commit -m "Add a StaticPages controller"
+
+---------
+---------
+---------  
+
+WRITING OUR FIRST TESTS
+
+We'll start with Integration Tests, which simulate the action of a user
+interacting with our app via a web browser. We use Capybara for writing the
+test definitions, because it's got a english-like syntax. Cucumber is another
+alternative. Let's begin:
+
+  rails generate integration_test static_pages
+
+  This creates the static_pages_spec.rb file in the spec/requests directory.
+
+---------
+The Generated spec/requests/static_pages_spec.rb
+
+  The generated file is not pretty, so we'll update it:
+
+  require 'spec_helper'
+
+  describe "Static pages" do
+
+    describe "Home page" do
+      it "should have the content 'Sample App'" do
+        visit '/static_pages/home'
+        expect(page).to have_content('Sample App')
+      end
+    end
+  
+  end
+
+  Look at the Home page describe block.
+  First, describe what you're testing, this can be any string but it's best
+  to just use the direct action title. Then, tell it what it should have when 
+  it performs a specific action.
+
+---------
+Adding the Capybara DSL to the RSpec helper file.
+(This won't be necessary once we look into the newer technique of feature 
+specs)
+
+  spec/spec_helper.rb: add this line to the RSpec.configure do |config| block:
+
+  config.include Capybara::DSL
+
+---------
+Running the First Test
+  
+  bundle exec rspec spec/requests/static_pages_spec.rb
+
+  Of course, this first test will fail as we haven't set the Sample page 
+  content. That's what you do in TDD: write a failing test first, then get it
+  to pass.
+
+---------
+Getting It To Pass
+  Editing the home.html.erb file:
+
+  <h1>Sample App</h1>
+  <p>
+    This is the home page for the
+    <a href="http://railstutorial.org/">Ruby on Rails Tutorial</a>
+    sample application.
+  </p>
+
+  Now rerun the test and it should pass:
+  bundle exec rspec spec/requests/static_pages_spec.rb
+  (You can omit bundle exec if RVM is working right.)
+
+---------
+Adding Another Test to The Spec:
+
+  describe "Help page" do
+
+    it "should have the content 'Help'" do
+      visit '/static_pages/help'
+      expect(page).to have_content('Help')
+    end
+  end
+
+  It's just like the home page test.
+
+  Run the rspec again, and it should fail.
+
+---------
+Fixing the Failing Help Page Test:
+  Just update the view (help.html.erb) lke we did with the home page.
+
+  <h1>Help</h1>
+  <p>
+    Get help on the Ruby on Rails Tutorial at the
+    <a href="http://railstutorial.org/help">Rails Tutorial help page</a>.
+    To get help on this sample app, see the
+    <a href="http://railstutorial.org/book">Rails Tutorial book</a>.
+  </p>
+
+  Run the test again and it should pass.
+
+---------
+---------
+---------
+Adding A New Page
+  First we'll write a test for the to-be-created page.
+
+  describe "About page" do
+    it "should have the content 'About Us'" do
+      visit '/static_pages/about'
+      expect(page).to have_content('About Us')
+    end
+  end
+
+  Running the test will give us an error:
+  "No route matches [GET] 'static_pages/about'"
+  This is a clue that we need to add the /static_pages/about route to 
+  routes.rb.
+
+---------
+Adding an About route to routes.rb.
+  Add this to routes.rb:
+  get "static_pages/about"
+
+  Run the test again and we'll get a new error:
+  "The action 'about' could not be found for StaticPagesController"
+
+  So let's add it to static_pages_controller.rb:
+
+  def about
+  end
+
+  Running the test again gives a new error:
+  Missing template static_pages/about
+  This means we're missing the correct about view file, about.html.erb
+
+  Set up the about.html.erb:
+
+  <h1>About Us</h1>
+  <p>
+    The <a href="http://railstutorial.org/">Ruby on Rails Tutorial</a>
+    is a project to make a book and screencasts to teach web development
+    with <a href="http://rubyonrails.org/">Ruby on Rails</a>. This
+    is the sample application for the tutorial.
+  </p>
+
+  Run the test one last time and it should be all green.
+
+---------
+---------
+---------
+
+Testing A Title Change
+  We're going to set up the pages to have dynamic titles. First, we'll write
+  tests for the titles, then add the titles, and finally use a layout file
+  to refactor the resulting pages and eliminate duplication (D.R.Y.)
+
+  'rails new' already generated a stock layout file. Let's rename it before
+  moving on:
+
+  mv app/views/layouts/application.html.erb foobar.temp
+
+  We're going to config the title so it displays like the following:
+  "Ruby on Rails Tutorial Sample App | Home", where the title is variable.
+
+  Add the tests first:
+
+  it "should have the right title" do
+    visit '/static_pages/home'
+    expect(page).to have_title("Ruby on Rails Tutorial Sample App | Home")
+  end
+
+  (The syntax is the same for the other pages, just change the visit and
+  expected page title.)
+
+  Run the rspec and it'll fail. Time to fix that.
+
+---------
+Passing The Title Tests
+
+  Change the HTML in the views to get the titles right. Example:
+
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>Ruby on Rails Tutorial Sample App | About Us</title>
+    </head>
+    <body>
+      <h1>About Us</h1>
+      <p>
+        The <a href="http://railstutorial.org/">Ruby on Rails Tutorial</a>
+        is a project to make a book and screencasts to teach web development
+        with <a href="http://rubyonrails.org/">Ruby on Rails</a>. This
+        is the sample application for the tutorial.
+      </p>
+    </body>
+  </html>
+
+  Run the rspec again and it should pass.
+
+---------
+---------
+---------
+Embedded Ruby
+  We can use embedded ruby in our views to avoid duplication. (DRY principle)
+
+  Change home.html.erb to this:
+
+  <% provide(:title, 'Home') %>
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>Ruby on Rails Tutorial Sample App | <%= yield(:title) %></title>
+    </head>
+    <body>
+      <h1>Sample App</h1>
+      <p>
+        This is the home page for the
+        <a href="http://railstutorial.org/">Ruby on Rails Tutorial</a>
+        sample application.
+      </p>
+    </body>
+  </html>
+
+  Some notes: <% %> sets a variable or runs the code in the block.
+              <%= %> inserts the return of the block into the view.
+
+
+
+
+
+
+
 
 ---------
 Undoing A Mistake
