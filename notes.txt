@@ -454,6 +454,65 @@ Embedded Ruby
   Some notes: <% %> sets a variable or runs the code in the block.
               <%= %> inserts the return of the block into the view.
 
+  Running the test again should still pass. 
+  Go ahead and refactor the about and help pages to include the new provide
+  blocks. Run the test to make sure they still pass.
+
+---------
+Eliminating Duplication With Layouts
+  We can factor out the repitition by using the application.html.erb layout.
+  Let's bring it back into play:
+  
+  mv foobar.temp app/views/layouts/application.html.erb
+
+  Now update the file:
+
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>Ruby on Rails Tutorial Sample App | <%= yield(:title) %></title>
+    <%= stylesheet_link_tag    "application", media: "all", "data-turbolinks-
+    track" => true %>
+    <%= javascript_include_tag "application", "data-turbolinks-track" => true 
+    %>
+    <%= csrf_meta_tags %>
+  </head>
+  <body>
+
+  <%= yield %>
+
+  </body>
+  </html>
+
+  Note: the <%= yield => in the body is responsible for inserting the contents
+  of each page into the layout, ie if the route is /static_pages/home, it will
+  yield whatever is in home.html.erb.
+
+  Now we need to clean up the views we edited earlier. Here's home.html.erb:
+
+  <% provide(:title, 'Home') %>
+  <h1>Sample App</h1>
+  <p>
+    This is the home page for the
+    <a href="http://railstutorial.org/">Ruby on Rails Tutorial</a>
+    sample application.
+  </p>
+
+  Notice how most of the HTML structue is gone? That's because the application
+  layout file is now providing it. Go ahead and change the about & help pages
+  as well.
+
+  Run the test again and it should pass. Congrats, title code is refactored.
+
+---------
+---------
+---------
+
+Conclusion:
+
+
+
+
 
 
 
