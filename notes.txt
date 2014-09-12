@@ -117,4 +117,90 @@ key isn’t exposed in your repository.
 
   SampleApp::Application.config.secret_key_base = secure_token
 
+
 ---------
+Configure Rails to Use RSpec (instead of Test::Unit)
+  
+  rails generate rspec:install
+
+  if install complains about no JS exec, install node.js.
+
+---------
+Initialize the Git repo.
+
+  git init
+  git add.
+  git commit -m "Initial commit"
+
+  Update the README while you're at it- switch it over to markdown.
+
+  git mv README.rdoc README.md
+  git commit -am "Improve the README"
+
+---------
+Adding the App to Github.
+  
+  Make a new repo at github.com.
+
+  git remote add origin https://github.com/<username>/sample_app.git
+  git push -u origin master
+
+---------
+Deploying the barebones app to Heroku.
+
+  heroku create
+  git push heroku master
+  heroku run rake db:migrate
+
+---------
+---------
+---------
+
+Generating And Customizing Static Pages
+
+Create a new branch on Git.
+
+  git checkout -b static-pages
+
+---------
+Generating a Static Pages controller.
+  We'll set up a controller for our static pages, with actions for Home and
+  Help pages.
+
+  rails generate controller StaticPages home help --no-test-framework
+
+  We pass the controller name in CamelCase, and Rails will generate the
+  controller in snake case, eg static_pages_controller.rb
+  We're going to write our own tests, so that's why we remove the stock ones.
+
+  This generator will automatically update the config/routes.rb file, adding
+  routes for the home and help actions.
+
+---------
+Routes.rb And Action Mapping
+
+Our current routes.rb file:
+  SampleApp::Application.routes.draw do
+    get "static_pages/home"
+    get "static_pages/help"
+  end
+
+  get "static_pages/home" maps requests for the URL /static_pages/home to the
+  home action in the StaticPages controller. By using get, we set up the route
+  to respond to the Get REST action. So, when we generate a home action inside
+  the StaticPages controller we automatically get a page at the address 
+  /static_pages/home.
+
+---------
+Undoing A Mistake
+
+  Undoing code generation- these two commands cancel each other out.
+  rails generate controller FooBars baz quux
+  rails destroy controller FooBars
+
+  Models can be handled the same way:
+  rails destroy model Foo
+
+  Undoing db migration:
+  rake db:rollback  <- back up one migration
+  rake db:migrate VERSION=0 <- goes all the way back
