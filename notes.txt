@@ -1,0 +1,120 @@
+NOTES FOR RAILS TUTORIAL.
+
+Initializing a new Rails app:
+  rails new app_name --skip-test-unit
+  
+  --skip-test-unit tells Rails to not generate a test directory associated with
+  the default Test::Unit framework; you would do this if you're using RSpec.
+
+---------
+Gemfile- this is what sets what gems (plugins) will be used on your server.
+Sample Gemfile:
+
+  source 'https://rubygems.org'
+  ruby '2.0.0'
+  #ruby-gemset=railstutorial_rails_4_0
+
+  gem 'rails', '4.0.8'
+
+  group :development, :test do
+    gem 'sqlite3', '1.3.8'
+    gem 'rspec-rails', '2.13.1'
+  end
+
+  group :test do
+    gem 'selenium-webdriver', '2.35.1'
+    gem 'capybara', '2.1.0'
+  end
+
+  gem 'sass-rails', '4.0.3'
+  gem 'uglifier', '2.1.1'
+  gem 'coffee-rails', '4.0.1'
+  gem 'jquery-rails', '3.0.4'
+  gem 'turbolinks', '1.1.1'
+  gem 'jbuilder', '1.0.2'
+
+  group :doc do
+    gem 'sdoc', '0.3.20', require: false
+  end
+
+  group :production do
+    gem 'pg', '0.15.1'
+    gem 'rails_12factor', '0.0.2'
+  end
+
+  rspec-rails is in the :development enviroment for writing tests.
+  capybara (& selenium, a dependancy) lets us write tests in natural syntax.
+
+  pg & rails_12factor are necessary for heroku deployment. pg is the postgresql
+  gem, which is the db that heroku uses. generally speaking you won't want to
+  use different db's across dev and production, but for this simple app it's
+  ok to use the default sqlite db for testing/dev.
+
+---------
+Installing the new gemset:
+  bundle install --without production
+  
+  --without production skips the production group.
+
+  run "bundle update" if you get errors, it forces version compatibity.
+
+---------
+.gitignore setup
+since we're going to commit this to a public repo, we need to set up a 
+.gitignore that guards against committing anything we don't want to.
+
+  sample .gitignore:
+
+  # Ignore bundler config.
+  /.bundle
+
+  # Ignore the default SQLite database.
+  /db/*.sqlite3
+  /db/*.sqlite3-journal
+
+  # Ignore all logfiles and tempfiles.
+  /log/*.log
+  /tmp
+
+  # Ignore other unneeded files.
+  # .secret is important to ignore!
+  database.yml
+  doc/
+  *.swp
+  *~
+  .project
+  .DS_Store
+  .idea
+  .secret
+
+  The most important part is .secret- this makes sure we don't share our
+  secret key in the repo.
+
+---------
+Dynamically Generating A Secret Token.
+Because the sample application is shared as a public repository, it’s 
+important to update the so-called secret token used by Rails to protect 
+session variables so that it is dynamically generated rather than hard-coded 
+Be sure to use the augmented .gitignore file from above so that the .secret 
+key isn’t exposed in your repository.
+
+**config/initializers/secret_token.rb
+  
+  require 'securerandom'
+
+  def secure_token
+    token_file = Rails.root.join('.secret')
+    if File.exist?(token_file)
+      # Use the existing token.
+      File.read(token_file).chomp
+    else
+      # Generate a new token and store it in token_file.
+      token = SecureRandom.hex(64)
+      File.write(token_file, token)
+      token
+    end
+  end
+
+  SampleApp::Application.config.secret_key_base = secure_token
+
+---------
